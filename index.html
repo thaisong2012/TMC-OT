@@ -1,0 +1,1961 @@
+<!DOCTYPE html>
+<html lang="th" class="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>TMC</title>
+  <meta name="theme-color" content="#000000" />
+  <meta name="description" content="เว็บแอปบันทึกเวลาทำงาน ค่าแรง และ OT พร้อมสรุปรายวัน รายเดือน และรายปี" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icon-512.png" type="image/png" />
+  <link rel="apple-touch-icon" href="icon-512.png" />
+  <!-- Google Fonts: Prompt & Sarabun สำหรับภาษาไทยที่คมชัด -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Prompt', 'Sarabun', 'sans-serif'],
+            num: ['Prompt', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              200: '#c7d2fe',
+              300: '#a5b4fc',
+              400: '#818cf8',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+              800: '#3730a3',
+              900: '#312e81',
+            }
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    body {
+      font-family: 'Prompt', 'Sarabun', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .tabular-nums {
+      font-variant-numeric: tabular-nums;
+    }
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.4);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(100, 116, 139, 0.6);
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes slideUp {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .animate-fade-in {
+      animation: fadeIn 0.2s ease-out forwards;
+    }
+    .animate-slide-up {
+      animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    .pb-safe {
+      padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 transition-colors duration-200 min-h-screen flex flex-col">
+
+  <!-- ==================== TOAST NOTIFICATION ==================== -->
+  <div id="toast-container" class="fixed top-20 right-4 z-[60] flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- ==================== TOP HEADER ==================== -->
+  <header class="sticky top-0 z-30 bg-white/85 dark:bg-slate-900/85 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
+      <!-- Brand Logo & Title -->
+      <div class="flex items-center gap-3 cursor-pointer" onclick="switchTab('dashboard')">
+        <img src="tmc-logo.jpg" alt="TMC Auto Work logo" class="w-12 h-12 rounded-lg object-cover shrink-0 border border-slate-200 dark:border-slate-700" />
+        <div>
+          <h1 class="text-base sm:text-lg font-bold tracking-tight text-slate-900 dark:text-white leading-tight">
+            TMC
+          </h1>
+        </div>
+      </div>
+
+      <!-- Desktop Navigation Tabs -->
+      <nav class="hidden md:flex items-center bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl border border-slate-200/60 dark:border-slate-700/60">
+        <button onclick="switchTab('dashboard')" id="desk-tab-dashboard" class="nav-desk-btn px-4 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
+          ภาพรวม (Dashboard)
+        </button>
+        <button onclick="switchTab('calendar')" id="desk-tab-calendar" class="nav-desk-btn px-4 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+          ปฏิทินบันทึกงาน
+        </button>
+        <button onclick="switchTab('history')" id="desk-tab-history" class="nav-desk-btn px-4 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+          ประวัติรายการ
+        </button>
+        <button onclick="switchTab('settings')" id="desk-tab-settings" class="nav-desk-btn px-4 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+          ตั้งค่า & ส่งออก
+        </button>
+      </nav>
+
+      <!-- Right Action Controls -->
+      <div class="flex items-center gap-2">
+        <!-- User Profile Pill (Simulated Gmail Auth) -->
+        <button onclick="openAuthModal()" id="header-auth-btn" title="บัญชีผู้ใช้งาน & ซิงก์ Gmail" class="flex items-center gap-1.5 px-2.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold transition-colors">
+          <span id="header-auth-avatar" class="w-5 h-5 rounded-full bg-brand-600 text-white flex items-center justify-center text-[10px] font-bold shrink-0">
+            U
+          </span>
+          <span id="header-auth-label" class="max-w-[85px] sm:max-w-[110px] truncate">ผู้ใช้งาน</span>
+        </button>
+
+        <!-- Local Storage Status Pill -->
+        <button onclick="switchTab('settings')" title="สถานะการจัดเก็บข้อมูลในเครื่อง" class="hidden sm:flex items-center gap-1.5 px-2.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-medium transition-colors">
+          <span id="sync-dot" class="w-2 h-2 rounded-full bg-emerald-500"></span>
+          <span id="sync-status-text">บันทึกในเครื่องแล้ว</span>
+        </button>
+
+        <!-- Quick Add Today OT Button -->
+        <button onclick="openDayModal(getTodayStr())" class="px-3 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 active:scale-95 text-white text-xs sm:text-sm font-medium shadow-sm shadow-brand-600/25 flex items-center gap-1.5 transition-all">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
+          <span>บันทึกวันนี้</span>
+        </button>
+
+        <!-- Theme Toggle -->
+        <button onclick="toggleTheme()" title="สลับโหมดมืด/สว่าง" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors">
+          <svg id="icon-sun" class="w-5 h-5 hidden dark:block text-amber-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg>
+          <svg id="icon-moon" class="w-5 h-5 block dark:hidden text-slate-700" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==================== MONTH / YEAR CONTEXT BAR ==================== -->
+  <div id="period-context-bar" class="bg-white dark:bg-slate-900 border-b border-slate-200/70 dark:border-slate-800/80">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center gap-1.5 sm:gap-2">
+        <button onclick="changeMonth(-1)" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors" title="เดือนก่อนหน้า">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" /></svg>
+        </button>
+        <div class="flex items-center gap-1.5">
+          <select id="select-month" onchange="onMonthYearChange()" class="bg-slate-100 dark:bg-slate-800 border-0 rounded-lg px-2.5 py-1.5 text-sm font-semibold text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-brand-500 cursor-pointer"></select>
+          <select id="select-year" onchange="onMonthYearChange()" class="bg-slate-100 dark:bg-slate-800 border-0 rounded-lg px-2.5 py-1.5 text-sm font-semibold text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-brand-500 cursor-pointer"></select>
+        </div>
+        <button onclick="changeMonth(1)" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors" title="เดือนถัดไป">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
+        </button>
+        <button onclick="jumpToToday()" class="ml-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-300 hover:bg-brand-100 dark:hover:bg-brand-900/60 transition-colors">
+          วันนี้
+        </button>
+      </div>
+
+      <!-- Current Rate Pill & Social Security Toggle -->
+      <div class="flex items-center gap-2 sm:gap-3 text-xs">
+        <div class="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+          <span>ค่าแรง: <strong id="header-daily-rate" class="text-slate-900 dark:text-white tabular-nums">372</strong> ฿</span>
+          <span class="text-slate-300 dark:text-slate-600">|</span>
+          <span>OT 1x: <strong id="header-ot-rate" class="text-brand-600 dark:text-brand-400 tabular-nums">46.5</strong> ฿/ชม.</span>
+        </div>
+        <label class="inline-flex items-center gap-1.5 cursor-pointer select-none bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg hover:bg-slate-200/70 dark:hover:bg-slate-700/70 transition-colors">
+          <input type="checkbox" id="toggle-sso" onchange="toggleSSOEstimate()" class="rounded text-brand-600 focus:ring-brand-500 w-3.5 h-3.5" />
+          <span class="text-slate-600 dark:text-slate-300 font-medium">หัก ปกส. 5%</span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MAIN CONTENT CONTAINER ==================== -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-5 pb-safe md:pb-10">
+
+    <!-- ==================== VIEW 1: DASHBOARD ==================== -->
+    <section id="view-dashboard" class="space-y-5 animate-fade-in">
+      
+      <!-- Top Row: Today Summary + Monthly Goal Progress -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        <!-- Today Highlight Card -->
+        <div class="lg:col-span-5 bg-gradient-to-br from-brand-600 via-indigo-600 to-violet-700 rounded-2xl p-5 text-white shadow-lg shadow-brand-600/15 flex flex-col justify-between relative overflow-hidden">
+          <div class="absolute -right-8 -top-8 w-36 h-36 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+          <div>
+            <div class="flex items-center justify-between gap-2">
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-white/20 backdrop-blur-sm">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse"></span>
+                สรุปยอดวันนี้ (<span id="dash-today-label">-</span>)
+              </span>
+              <button onclick="openDayModal(getTodayStr())" class="text-xs bg-white text-brand-700 hover:bg-brand-50 font-semibold px-3 py-1 rounded-lg shadow-sm transition-colors">
+                + เพิ่ม/แก้ไข
+              </button>
+            </div>
+            <div class="mt-4 flex items-baseline gap-2">
+              <span id="dash-today-total" class="text-3xl sm:text-4xl font-bold tabular-nums tracking-tight">0.00</span>
+              <span class="text-sm font-medium text-indigo-100">บาท</span>
+            </div>
+            <p id="dash-today-breakdown" class="text-xs text-indigo-100/90 mt-1">
+              ค่าแรง 0 ฿ • โอที 0 ชม. (0 ฿)
+            </p>
+          </div>
+
+          <div class="mt-5 pt-3.5 border-t border-white/15 flex items-center justify-between text-xs">
+            <span class="text-indigo-100">สถานะวันนี้: <strong id="dash-today-status" class="text-white">ยังไม่บันทึก</strong></span>
+            <button onclick="quickMarkTodayWork()" class="underline hover:text-white text-indigo-100 font-medium">
+              ติ๊กเข้างานวันนี้ทันที
+            </button>
+          </div>
+        </div>
+
+        <!-- Monthly Target Progress Card -->
+        <div class="lg:col-span-7 bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+          <div>
+            <div class="flex items-start justify-between gap-2">
+              <div>
+                <h2 class="text-sm font-semibold text-slate-500 dark:text-slate-400">เป้าหมายรายได้ประจำเดือน (<span id="dash-goal-month-name">-</span>)</h2>
+                <div class="mt-1 flex flex-wrap items-baseline gap-2">
+                  <span id="dash-month-grand" class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tabular-nums">0.00</span>
+                  <span class="text-sm text-slate-500 dark:text-slate-400">/ <span id="dash-goal-target" class="font-semibold text-slate-700 dark:text-slate-200 tabular-nums">15,000</span> บาท</span>
+                </div>
+              </div>
+              <div class="text-right">
+                <span id="dash-goal-percent" class="inline-block px-2.5 py-1 rounded-xl text-sm font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 tabular-nums">
+                  0%
+                </span>
+              </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="mt-4">
+              <div class="w-full h-3.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden p-0.5">
+                <div id="dash-goal-bar" class="h-full rounded-full bg-gradient-to-r from-brand-500 via-indigo-500 to-emerald-500 transition-all duration-500" style="width: 0%"></div>
+              </div>
+              <div class="mt-2 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+                <span id="dash-goal-remaining">ขาดอีก 15,000.00 บาท จะถึงเป้าหมาย</span>
+                <button onclick="switchTab('settings')" class="text-brand-600 dark:text-brand-400 hover:underline font-medium">แก้ไขเป้าหมาย</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Sub-stats inside Goal Card -->
+          <div class="mt-4 pt-3.5 border-t border-slate-100 dark:border-slate-800 grid grid-cols-3 gap-2 text-center">
+            <div class="bg-slate-50 dark:bg-slate-800/60 rounded-xl p-2">
+              <div class="text-[11px] text-slate-500 dark:text-slate-400">วันทำงาน (เดือนนี้)</div>
+              <div class="text-sm sm:text-base font-bold text-slate-800 dark:text-slate-100 tabular-nums"><span id="dash-month-days">0</span> วัน</div>
+            </div>
+            <div class="bg-slate-50 dark:bg-slate-800/60 rounded-xl p-2">
+              <div class="text-[11px] text-slate-500 dark:text-slate-400">ชั่วโมง OT รวม</div>
+              <div class="text-sm sm:text-base font-bold text-brand-600 dark:text-brand-400 tabular-nums"><span id="dash-month-ot-hours">0</span> ชม.</div>
+            </div>
+            <div class="bg-slate-50 dark:bg-slate-800/60 rounded-xl p-2">
+              <div class="text-[11px] text-slate-500 dark:text-slate-400">เฉลี่ยรายได้/วัน</div>
+              <div class="text-sm sm:text-base font-bold text-emerald-600 dark:text-emerald-400 tabular-nums"><span id="dash-month-avg">0</span> ฿</div>
+            </div>
+          </div>
+          <div id="dash-goal-pace-hint" class="mt-2.5 text-[11px] text-center text-slate-500 dark:text-slate-400 bg-slate-50/80 dark:bg-slate-800/40 rounded-lg py-1.5 px-2">
+            กำลังคำนวณจังหวะการเก็บเป้าหมาย...
+          </div>
+        </div>
+      </div>
+
+      <!-- Second Row: Pay Cycles & Period Overview Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        
+        <!-- Cycle 1 Card -->
+        <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between gap-2 mb-2">
+              <span class="text-xs font-bold px-2.5 py-1 rounded-lg bg-sky-100 dark:bg-sky-950 text-sky-700 dark:text-sky-300">รอบวีคที่ 1 (ว.1)</span>
+              <div class="flex items-center gap-1.5">
+                <span id="c1-sso-badge" class="hidden text-[10px] font-semibold text-rose-500 bg-rose-50 dark:bg-rose-950/60 px-1.5 py-0.5 rounded">หัก ปกส.</span>
+                <span id="c1-days-badge" class="text-xs text-slate-500 dark:text-slate-400 font-medium">0 วันงาน</span>
+              </div>
+            </div>
+            <div id="c1-date-range" class="text-xs text-slate-500 dark:text-slate-400 font-medium mb-3">วันที่ 29 (เดือนก่อน) - 13</div>
+            <div class="flex items-baseline gap-1.5">
+              <span id="c1-total" class="text-2xl font-bold text-slate-900 dark:text-white tabular-nums">0.00</span>
+              <span class="text-xs text-slate-500">บาท (สุทธิ)</span>
+            </div>
+          </div>
+          <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 space-y-1 text-xs text-slate-600 dark:text-slate-400">
+            <div class="flex justify-between"><span>ค่าแรงปกติ:</span> <strong id="c1-wage" class="text-slate-800 dark:text-slate-200 tabular-nums">0.00 ฿</strong></div>
+            <div class="flex justify-between"><span>OT (<span id="c1-ot-hrs">0</span> ชม.):</span> <strong id="c1-ot-pay" class="text-brand-600 dark:text-brand-400 tabular-nums">0.00 ฿</strong></div>
+            <div class="flex justify-between text-slate-500"><span>รวมก่อนหัก:</span> <strong id="c1-gross" class="tabular-nums">0.00 ฿</strong></div>
+            <div class="flex justify-between text-rose-500"><span>หัก ปกส. 5% (จากค่าแรง):</span> <strong id="c1-sso" class="tabular-nums">-0.00 ฿</strong></div>
+          </div>
+        </div>
+
+        <!-- Cycle 2 Card -->
+        <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between gap-2 mb-2">
+              <span class="text-xs font-bold px-2.5 py-1 rounded-lg bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300">รอบวีคที่ 2 (ว.2)</span>
+              <div class="flex items-center gap-1.5">
+                <span id="c2-sso-badge" class="hidden text-[10px] font-semibold text-rose-500 bg-rose-50 dark:bg-rose-950/60 px-1.5 py-0.5 rounded">หัก ปกส.</span>
+                <span id="c2-days-badge" class="text-xs text-slate-500 dark:text-slate-400 font-medium">0 วันงาน</span>
+              </div>
+            </div>
+            <div id="c2-date-range" class="text-xs text-slate-500 dark:text-slate-400 font-medium mb-3">วันที่ 14 - 28</div>
+            <div class="flex items-baseline gap-1.5">
+              <span id="c2-total" class="text-2xl font-bold text-slate-900 dark:text-white tabular-nums">0.00</span>
+              <span class="text-xs text-slate-500">บาท (สุทธิ)</span>
+            </div>
+          </div>
+          <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 space-y-1 text-xs text-slate-600 dark:text-slate-400">
+            <div class="flex justify-between"><span>ค่าแรงปกติ:</span> <strong id="c2-wage" class="text-slate-800 dark:text-slate-200 tabular-nums">0.00 ฿</strong></div>
+            <div class="flex justify-between"><span>OT (<span id="c2-ot-hrs">0</span> ชม.):</span> <strong id="c2-ot-pay" class="text-brand-600 dark:text-brand-400 tabular-nums">0.00 ฿</strong></div>
+            <div class="flex justify-between text-slate-500"><span>รวมก่อนหัก:</span> <strong id="c2-gross" class="tabular-nums">0.00 ฿</strong></div>
+            <div class="flex justify-between text-rose-500"><span>หัก ปกส. 5% (จากค่าแรง):</span> <strong id="c2-sso" class="tabular-nums">-0.00 ฿</strong></div>
+          </div>
+        </div>
+
+        <!-- Monthly Net Summary Card -->
+        <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between gap-2 mb-2">
+              <span class="text-xs font-bold px-2.5 py-1 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">สรุปสุทธิเดือนนี้</span>
+              <span id="month-sso-badge" class="hidden text-[11px] font-medium text-rose-500 bg-rose-50 dark:bg-rose-950/60 px-2 py-0.5 rounded-md">หัก ปกส. แล้ว</span>
+            </div>
+            <div id="month-summary-label" class="text-xs text-slate-500 dark:text-slate-400 font-medium mb-3">ยอดรวมตามปฏิทิน</div>
+            <div class="flex items-baseline gap-1.5">
+              <span id="card-month-net" class="text-2xl font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">0.00</span>
+              <span class="text-xs text-slate-500">บาท</span>
+            </div>
+          </div>
+          <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 space-y-1 text-xs text-slate-600 dark:text-slate-400">
+            <div class="flex justify-between"><span>ยอดรับรวมก่อนหัก:</span> <strong id="card-month-gross" class="text-slate-800 dark:text-slate-200 tabular-nums">0.00 ฿</strong></div>
+            <div class="flex justify-between"><span>หักประกันสังคม (5%):</span> <strong id="card-month-sso" class="text-rose-500 tabular-nums">-0.00 ฿</strong></div>
+          </div>
+        </div>
+
+        <!-- Yearly Summary Card -->
+        <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between gap-2 mb-2">
+              <span class="text-xs font-bold px-2.5 py-1 rounded-lg bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300">สะสมทั้งปี <span id="card-year-label">2569</span></span>
+              <span id="card-year-days" class="text-xs text-slate-500 dark:text-slate-400 font-medium">0 วัน</span>
+            </div>
+            <div class="text-xs text-slate-500 dark:text-slate-400 font-medium mb-3">รายได้รวมตลอดปี</div>
+            <div class="flex items-baseline gap-1.5">
+              <span id="card-year-total" class="text-2xl font-bold text-slate-900 dark:text-white tabular-nums">0.00</span>
+              <span class="text-xs text-slate-500">บาท</span>
+            </div>
+          </div>
+          <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 space-y-1 text-xs text-slate-600 dark:text-slate-400">
+            <div class="flex justify-between"><span>ค่าแรงสะสม:</span> <strong id="card-year-wage" class="text-slate-800 dark:text-slate-200 tabular-nums">0.00 ฿</strong></div>
+            <div class="flex justify-between"><span>OT สะสม (<span id="card-year-ot-hrs">0</span> ชม.):</span> <strong id="card-year-ot-pay" class="text-brand-600 dark:text-brand-400 tabular-nums">0.00 ฿</strong></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Third Row: 12-Month Income Comparison Chart -->
+      <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200/80 dark:border-slate-800 shadow-sm">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+          <div>
+            <h3 class="text-base font-bold text-slate-900 dark:text-white">กราฟเปรียบเทียบรายได้รายเดือน ปี <span id="chart-year-title">2569</span></h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400">แสดงสัดส่วนค่าแรงปกติและค่าล่วงเวลา (OT) คลิกที่แท่งกราฟเพื่อดูข้อมูลเดือนนั้น</p>
+          </div>
+          <div class="flex items-center gap-4 text-xs">
+            <span class="flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
+              <span class="w-3 h-3 rounded-sm bg-brand-500 inline-block"></span> ค่าแรงปกติ
+            </span>
+            <span class="flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
+              <span class="w-3 h-3 rounded-sm bg-amber-400 inline-block"></span> ค่าโอที (OT)
+            </span>
+          </div>
+        </div>
+
+        <!-- Interactive 12-Bar Chart Container -->
+        <div class="relative pt-6 pb-2">
+          <div id="chart-12-months" class="grid grid-cols-12 gap-1.5 sm:gap-3 h-52 sm:h-60 items-end border-b border-slate-200 dark:border-slate-800 pb-2 px-1">
+            <!-- Rendered by JS -->
+          </div>
+          <div id="chart-12-labels" class="grid grid-cols-12 gap-1.5 sm:gap-3 pt-2 text-center text-[11px] sm:text-xs font-medium text-slate-500 dark:text-slate-400 px-1">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ==================== VIEW 2: INTERACTIVE CALENDAR ==================== -->
+    <section id="view-calendar" class="hidden space-y-4 animate-fade-in">
+      <!-- Calendar Action Bar -->
+      <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-wrap items-center justify-between gap-3">
+        <div class="flex flex-wrap items-center gap-2 text-xs">
+          <span class="font-semibold text-slate-700 dark:text-slate-200">คำอธิบายป้าย:</span>
+          <span class="px-2 py-0.5 rounded bg-sky-100 dark:bg-sky-950 text-sky-700 dark:text-sky-300 font-semibold">ว.1 = รอบวีคที่ 1</span>
+          <span class="px-2 py-0.5 rounded bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 font-semibold">ว.2 = รอบวีคที่ 2</span>
+          <span class="px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-semibold">✓ มาทำงาน</span>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <button onclick="batchMarkWeekdays()" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-sm flex items-center gap-1.5 transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+            <span>ติ๊กทำงาน จ.-ส. ทั้งเดือน</span>
+          </button>
+          <button onclick="openConfirmClearMonth()" class="px-3 py-1.5 rounded-xl bg-rose-50 dark:bg-rose-950/60 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-rose-600 dark:text-rose-400 text-xs font-semibold transition-colors">
+            ล้างข้อมูลเดือนนี้
+          </button>
+        </div>
+      </div>
+
+      <!-- Calendar Grid Wrapper -->
+      <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden">
+        <!-- Days of Week Header -->
+        <div class="grid grid-cols-7 bg-slate-100/80 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-800 text-center py-2.5 text-xs font-bold">
+          <div class="text-rose-500">อา.</div>
+          <div class="text-slate-700 dark:text-slate-300">จ.</div>
+          <div class="text-slate-700 dark:text-slate-300">อ.</div>
+          <div class="text-slate-700 dark:text-slate-300">พ.</div>
+          <div class="text-slate-700 dark:text-slate-300">พฤ.</div>
+          <div class="text-slate-700 dark:text-slate-300">ศ.</div>
+          <div class="text-indigo-500">ส.</div>
+        </div>
+
+        <!-- Calendar Days Grid -->
+        <div id="calendar-grid" class="grid grid-cols-7 divide-x divide-y divide-slate-100 dark:divide-slate-800/80">
+          <!-- Populated dynamically via JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== VIEW 3: HISTORY LIST ==================== -->
+    <section id="view-history" class="hidden space-y-4 animate-fade-in">
+      <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-800 shadow-sm">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <div>
+            <h3 class="text-base font-bold text-slate-900 dark:text-white">ประวัติการบันทึกประจำเดือน <span id="history-month-title">-</span></h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400">คลิกที่รายการเพื่อแก้ไขรายละเอียด หรือเพิ่มรายการ OT เพิ่มเติม</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <label class="inline-flex items-center gap-2 text-xs font-medium bg-slate-100 dark:bg-slate-800 px-3 py-2 rounded-xl cursor-pointer select-none">
+              <input type="checkbox" id="filter-only-ot" onchange="renderHistoryView()" class="rounded text-brand-600 focus:ring-brand-500" />
+              <span>แสดงเฉพาะวันที่มี OT</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- History Table / Cards -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="border-b border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-500 dark:text-slate-400">
+                <th class="py-3 px-3">วันที่</th>
+                <th class="py-3 px-2">รอบวีค</th>
+                <th class="py-3 px-2">สถานะ / หมายเหตุ</th>
+                <th class="py-3 px-2 text-right">ค่าแรงปกติ</th>
+                <th class="py-3 px-2 text-right">รายการ OT</th>
+                <th class="py-3 px-3 text-right">รวมสุทธิ</th>
+                <th class="py-3 px-2 text-center">จัดการ</th>
+              </tr>
+            </thead>
+            <tbody id="history-table-body" class="divide-y divide-slate-100 dark:divide-slate-800/80 text-sm">
+              <!-- Populated by JS -->
+            </tbody>
+          </table>
+        </div>
+        <div id="history-empty-state" class="hidden py-12 text-center">
+          <div class="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center mx-auto mb-3">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+          </div>
+          <p class="text-sm font-semibold text-slate-600 dark:text-slate-300">ยังไม่มีรายการบันทึกในเดือนนี้</p>
+          <p class="text-xs text-slate-400 mt-1">ไปที่หน้าปฏิทินเพื่อติ๊กวันทำงาน หรือกดปุ่ม "+ บันทึกวันนี้"</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== VIEW 4: SETTINGS & BACKUP ==================== -->
+    <section id="view-settings" class="hidden space-y-5 animate-fade-in">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        
+        <!-- Card 1: Wage & OT Rate Settings -->
+        <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
+          <div class="flex items-center gap-2.5 border-b border-slate-100 dark:border-slate-800 pb-3">
+            <div class="w-8 h-8 rounded-lg bg-brand-100 dark:bg-brand-950 text-brand-600 dark:text-brand-400 flex items-center justify-center font-bold">฿</div>
+            <div>
+              <h3 class="text-base font-bold text-slate-900 dark:text-white">ตั้งค่าฐานค่าแรง & เรท OT</h3>
+              <p class="text-xs text-slate-500 dark:text-slate-400">กำหนดอัตราค่าจ้างรายวันและค่าล่วงเวลาต่อชั่วโมง</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">ค่าแรงรายวัน (บาท/วัน)</label>
+              <input type="number" step="any" id="set-daily-rate" class="w-full rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3.5 py-2.5 text-sm font-bold tabular-nums focus:ring-2 focus:ring-brand-500 outline-none" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">เรท OT 1x (บาท/ชั่วโมง)</label>
+              <div class="flex gap-1.5">
+                <input type="number" step="any" id="set-ot-rate" class="w-full rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3.5 py-2.5 text-sm font-bold tabular-nums focus:ring-2 focus:ring-brand-500 outline-none" />
+                <button type="button" onclick="autoCalcOtBase()" title="คำนวณอัตโนมัติจาก ค่าแรง ÷ 8 ชม." class="px-3 py-2 rounded-xl bg-brand-50 dark:bg-brand-950 text-brand-600 dark:text-brand-400 hover:bg-brand-100 dark:hover:bg-brand-900 text-xs font-bold whitespace-nowrap transition-colors">
+                  ÷ 8 ชม.
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">เป้าหมายรายได้ประจำเดือน (บาท)</label>
+            <input type="number" step="100" id="set-monthly-goal" class="w-full rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3.5 py-2.5 text-sm font-bold tabular-nums focus:ring-2 focus:ring-brand-500 outline-none" />
+          </div>
+
+          <!-- Rate Update Scope -->
+          <div class="bg-slate-50 dark:bg-slate-800/60 p-3.5 rounded-xl space-y-2">
+            <span class="block text-xs font-semibold text-slate-700 dark:text-slate-300">เมื่อกดบันทึกเรทใหม่ ให้มีผลกับข้อมูลช่วงใด?</span>
+            <label class="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300 cursor-pointer">
+              <input type="radio" name="rate-apply-scope" value="future" checked class="text-brand-600 focus:ring-brand-500" />
+              <span><strong>เฉพาะวันนี้และอนาคต</strong> (ข้อมูลย้อนหลังยังคงใช้เรทเดิมที่เคยบันทึก)</span>
+            </label>
+            <label class="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300 cursor-pointer">
+              <input type="radio" name="rate-apply-scope" value="all" class="text-brand-600 focus:ring-brand-500" />
+              <span><strong>อัปเดตย้อนหลังทั้งหมด</strong> (คำนวณเงินใหม่ทุกวันที่มีการบันทึกไว้)</span>
+            </label>
+          </div>
+
+          <button onclick="saveRateSettings()" class="w-full py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold shadow-sm transition-colors">
+            บันทึกการตั้งค่าเรทและเป้าหมาย
+          </button>
+        </div>
+
+        <!-- Card 2: Cross-Month Pay Cycle Settings -->
+        <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
+          <div class="flex items-center gap-2.5 border-b border-slate-100 dark:border-slate-800 pb-3">
+            <div class="w-8 h-8 rounded-lg bg-sky-100 dark:bg-sky-950 text-sky-600 dark:text-sky-400 flex items-center justify-center font-bold">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+            </div>
+            <div>
+              <h3 class="text-base font-bold text-slate-900 dark:text-white">ตั้งค่ารอบตัดวีคอัจฉริยะ</h3>
+              <p class="text-xs text-slate-500 dark:text-slate-400">รองรับรอบตัดวีคข้ามเดือน (ดึงยอดปลายเดือนก่อนมารวมอัตโนมัติ)</p>
+            </div>
+          </div>
+
+          <!-- Presets -->
+          <div>
+            <span class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-2">รูปแบบยอดนิยม (Preset):</span>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <button type="button" onclick="applyCyclePreset('29-13')" class="px-3 py-2 rounded-xl border border-brand-200 dark:border-brand-800 bg-brand-50/60 dark:bg-brand-950/40 hover:bg-brand-100 dark:hover:bg-brand-900/50 text-brand-700 dark:text-brand-300 text-xs font-semibold text-left transition-colors">
+                <div>29 - 13 / 14 - 28</div>
+                <div class="text-[10px] font-normal opacity-80">รอบโรงงาน (ว.1 ข้ามเดือน)</div>
+              </button>
+              <button type="button" onclick="applyCyclePreset('1-15')" class="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold text-left transition-colors">
+                <div>1 - 15 / 16 - สิ้นเดือน</div>
+                <div class="text-[10px] font-normal opacity-80">รอบปกติ (ภายในเดือนเดียว)</div>
+              </button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div class="p-3 rounded-xl bg-sky-50/60 dark:bg-sky-950/30 border border-sky-100 dark:border-sky-900/50 space-y-2">
+              <span class="text-xs font-bold text-sky-700 dark:text-sky-300 block">รอบวีคที่ 1 (ว.1)</span>
+              <div class="flex items-center gap-1.5 text-xs">
+                <span>เริ่มวันที่</span>
+                <input type="number" min="1" max="31" id="set-c1-start" class="w-14 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2 py-1 text-center font-bold" />
+                <span>ถึง</span>
+                <input type="number" min="1" max="31" id="set-c1-end" class="w-14 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2 py-1 text-center font-bold" />
+              </div>
+              <p class="text-[10px] text-slate-500 dark:text-slate-400">*หากวันเริ่ม > วันสิ้นสุด ระบบจะดึงจากเดือนก่อนหน้า</p>
+            </div>
+
+            <div class="p-3 rounded-xl bg-purple-50/60 dark:bg-purple-950/30 border border-purple-100 dark:border-purple-900/50 space-y-2">
+              <span class="text-xs font-bold text-purple-700 dark:text-purple-300 block">รอบวีคที่ 2 (ว.2)</span>
+              <div class="flex items-center gap-1.5 text-xs">
+                <span>เริ่มวันที่</span>
+                <input type="number" min="1" max="31" id="set-c2-start" class="w-14 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2 py-1 text-center font-bold" />
+                <span>ถึง</span>
+                <input type="number" min="1" max="31" id="set-c2-end" class="w-14 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2 py-1 text-center font-bold" />
+              </div>
+              <p class="text-[10px] text-slate-500 dark:text-slate-400">*ใส่ 31 หากต้องการให้นับถึงวันสิ้นเดือน</p>
+            </div>
+          </div>
+
+          <button onclick="saveCycleSettings()" class="w-full py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-sm font-semibold shadow-sm transition-colors">
+            บันทึกรอบตัดวีค
+          </button>
+        </div>
+
+        <!-- Card 3: Data Backup & Reset -->
+        <div class="lg:col-span-2 bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
+            <div class="flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+              </div>
+              <div>
+                <h3 class="text-base font-bold text-slate-900 dark:text-white">สำรองข้อมูลและกู้คืน</h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400">ข้อมูลบันทึกในอุปกรณ์นี้อัตโนมัติ ส่งออก JSON เพื่อสำรองหรือย้ายเครื่องได้</p>
+              </div>
+            </div>
+            <button onclick="exportDataJSON()" class="px-3.5 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-xs font-semibold flex items-center gap-2 transition-colors">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+              <span>ส่งออกข้อมูลสำรอง JSON</span>
+            </button>
+          </div>
+
+          <div class="rounded-xl border border-emerald-200 dark:border-emerald-900 bg-emerald-50/60 dark:bg-emerald-950/20 p-4 space-y-3">
+            <div>
+              <h4 class="text-sm font-bold text-slate-800 dark:text-slate-100">เชื่อมต่อ Google Sheets</h4>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">วาง URL เว็บแอปจาก Google Apps Script แล้วกดบันทึก จากนั้นเลือกส่งหรือดึงข้อมูล</p>
+            </div>
+            <input id="sheets-webapp-url" type="url" placeholder="https://script.google.com/macros/s/.../exec" class="w-full rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 py-2.5 text-xs outline-none focus:ring-2 focus:ring-emerald-500" />
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <button onclick="saveSheetsUrl()" class="py-2.5 rounded-xl bg-slate-700 hover:bg-slate-800 text-white text-xs font-semibold">บันทึก URL</button>
+              <button onclick="syncToGoogleSheets()" class="py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold">ส่งข้อมูลไป Sheets</button>
+              <button onclick="restoreFromGoogleSheets()" class="py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-xs font-semibold">ดึงข้อมูลจาก Sheets</button>
+            </div>
+            <p id="sheets-sync-status" class="text-[11px] text-slate-500 dark:text-slate-400">ยังไม่ได้ตั้งค่า Google Sheets</p>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <button onclick="exportDataJSON()" class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center gap-2 text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-200 transition-colors">
+              <svg class="w-4 h-4 text-brand-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+              <span>ดาวน์โหลดไฟล์สำรอง (.JSON)</span>
+            </button>
+
+            <label class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center gap-2 text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-200 cursor-pointer transition-colors">
+              <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+              <span>กู้คืนข้อมูลจากไฟล์ (.JSON)</span>
+              <input type="file" accept=".json" onchange="importDataJSON(event)" class="hidden" />
+            </label>
+
+            <button onclick="openConfirmResetAll()" class="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/50 border border-rose-200 dark:border-rose-900/60 flex items-center justify-center gap-2 text-xs sm:text-sm font-semibold text-rose-600 dark:text-rose-400 transition-colors">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+              <span>ล้างข้อมูลทั้งหมดในระบบ</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ==================== MOBILE BOTTOM NAVIGATION ==================== -->
+  <nav class="md:hidden fixed bottom-0 inset-x-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 px-2 py-1.5 flex items-center justify-around">
+    <button onclick="switchTab('dashboard')" id="mob-tab-dashboard" class="nav-mob-btn flex flex-col items-center justify-center py-1 px-3 rounded-xl text-brand-600 dark:text-brand-400">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
+      <span class="text-[10px] font-semibold mt-0.5">ภาพรวม</span>
+    </button>
+    <button onclick="switchTab('calendar')" id="mob-tab-calendar" class="nav-mob-btn flex flex-col items-center justify-center py-1 px-3 rounded-xl text-slate-500 dark:text-slate-400">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+      <span class="text-[10px] font-semibold mt-0.5">ปฏิทิน</span>
+    </button>
+    <button onclick="switchTab('history')" id="mob-tab-history" class="nav-mob-btn flex flex-col items-center justify-center py-1 px-3 rounded-xl text-slate-500 dark:text-slate-400">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+      <span class="text-[10px] font-semibold mt-0.5">ประวัติ</span>
+    </button>
+    <button onclick="switchTab('settings')" id="mob-tab-settings" class="nav-mob-btn flex flex-col items-center justify-center py-1 px-3 rounded-xl text-slate-500 dark:text-slate-400">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+      <span class="text-[10px] font-semibold mt-0.5">ตั้งค่า</span>
+    </button>
+  </nav>
+
+  <!-- ==================== MODAL 1: DAY ENTRY & MULTI-RATE OT ==================== -->
+  <div id="day-modal" class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-white dark:bg-slate-900 w-full max-w-lg rounded-t-3xl sm:rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden animate-slide-up max-h-[92vh] flex flex-col">
+      <!-- Modal Header -->
+      <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+        <div>
+          <span id="modal-cycle-badge" class="inline-block text-[10px] font-bold px-2 py-0.5 rounded bg-sky-100 dark:bg-sky-950 text-sky-700 dark:text-sky-300 mb-1">รอบวีคที่ 1</span>
+          <h3 id="modal-date-title" class="text-base sm:text-lg font-bold text-slate-900 dark:text-white">วันพุธที่ 18 พฤศจิกายน 2569</h3>
+        </div>
+        <button onclick="closeDayModal()" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="p-5 overflow-y-auto space-y-4 flex-1">
+        <!-- Work Day Toggle -->
+        <div class="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200/70 dark:border-slate-700/70">
+          <div>
+            <div class="text-sm font-bold text-slate-800 dark:text-slate-100">มาทำงาน (รับค่าแรงรายวัน)</div>
+            <div class="text-xs text-slate-500 dark:text-slate-400">เรทค่าแรง: <strong id="modal-base-wage-text" class="text-brand-600 dark:text-brand-400">372</strong> บาท</div>
+          </div>
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" id="modal-worked-toggle" onchange="updateModalSummary()" class="sr-only peer" />
+            <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+          </label>
+        </div>
+
+        <!-- Note Input -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">หมายเหตุ / กะการทำงาน (ไม่บังคับ)</label>
+          <input type="text" id="modal-note-input" placeholder="เช่น กะเช้า, ทำงานวันหยุด, ลากิจ..." class="w-full rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3.5 py-2 text-sm focus:ring-2 focus:ring-brand-500 outline-none" />
+        </div>
+
+        <!-- Multi-Rate OT Builder -->
+        <div class="p-4 rounded-2xl bg-brand-50/50 dark:bg-brand-950/20 border border-brand-100 dark:border-brand-900/50 space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-brand-700 dark:text-brand-300">เพิ่มรายการโอที (รองรับหลายเรทในวันเดียว)</span>
+            <span class="text-[11px] text-slate-500 dark:text-slate-400">ฐาน 1x = <span id="modal-ot-base-rate">46.5</span> ฿/ชม.</span>
+          </div>
+
+          <!-- Quick Hour Chips -->
+          <div>
+            <span class="block text-[11px] text-slate-500 dark:text-slate-400 mb-1.5">1. เลือกหรือกรอกชั่วโมง OT:</span>
+            <div class="flex flex-wrap gap-1.5 mb-2">
+              <button type="button" onclick="setQuickOtHour(1)" class="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-brand-500 text-xs font-semibold tabular-nums">1</button>
+              <button type="button" onclick="setQuickOtHour(1.5)" class="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-brand-500 text-xs font-semibold tabular-nums">1.5</button>
+              <button type="button" onclick="setQuickOtHour(2)" class="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-brand-500 text-xs font-semibold tabular-nums">2</button>
+              <button type="button" onclick="setQuickOtHour(2.5)" class="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-brand-500 text-xs font-semibold tabular-nums">2.5</button>
+              <button type="button" onclick="setQuickOtHour(3)" class="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-brand-500 text-xs font-semibold tabular-nums">3</button>
+              <button type="button" onclick="setQuickOtHour(4)" class="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-brand-500 text-xs font-semibold tabular-nums">4</button>
+              <button type="button" onclick="setQuickOtHour(8)" class="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-brand-500 text-xs font-semibold tabular-nums">8</button>
+            </div>
+            <input type="number" step="0.1" min="0.1" max="24" id="modal-ot-hours-input" value="2" placeholder="ระบุชั่วโมง เช่น 1.5, 2.5" class="w-full rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm font-bold tabular-nums focus:ring-2 focus:ring-brand-500 outline-none" />
+          </div>
+
+          <!-- Multiplier Selector -->
+          <div>
+            <span class="block text-[11px] text-slate-500 dark:text-slate-400 mb-1.5">2. เลือกตัวคูณเรท OT:</span>
+            <div class="grid grid-cols-4 gap-1.5">
+              <button type="button" onclick="selectOtMultiplier(1)" id="mult-btn-1" class="mult-btn py-1.5 rounded-xl border text-xs font-bold transition-all">1x</button>
+              <button type="button" onclick="selectOtMultiplier(1.5)" id="mult-btn-1.5" class="mult-btn py-1.5 rounded-xl border text-xs font-bold transition-all">1.5x</button>
+              <button type="button" onclick="selectOtMultiplier(2)" id="mult-btn-2" class="mult-btn py-1.5 rounded-xl border text-xs font-bold transition-all">2x</button>
+              <button type="button" onclick="selectOtMultiplier(3)" id="mult-btn-3" class="mult-btn py-1.5 rounded-xl border text-xs font-bold transition-all">3x</button>
+            </div>
+          </div>
+
+          <button type="button" onclick="addOtItemToModal()" class="w-full py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold shadow-sm flex items-center justify-center gap-1.5 transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
+            <span>+ เพิ่มรายการ OT นี้</span>
+          </button>
+        </div>
+
+        <!-- Added OT List -->
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold text-slate-700 dark:text-slate-300">รายการ OT ที่บันทึกไว้ในวันนี้:</span>
+            <span id="modal-ot-count" class="text-xs text-slate-500">0 รายการ</span>
+          </div>
+          <div id="modal-ot-items-list" class="space-y-2">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="px-5 py-4 bg-slate-50 dark:bg-slate-800/80 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3">
+        <div>
+          <div class="text-[11px] text-slate-500 dark:text-slate-400">ยอดรวมวันนี้</div>
+          <div class="text-lg sm:text-xl font-bold text-brand-600 dark:text-brand-400 tabular-nums"><span id="modal-total-amount">0.00</span> ฿</div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="deleteDayRecord()" class="px-3 py-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/60 hover:bg-rose-100 text-rose-600 dark:text-rose-400 text-xs font-semibold transition-colors">
+            ลบวันนี้
+          </button>
+          <button type="button" onclick="saveDayModal()" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold shadow-sm transition-colors">
+            บันทึกข้อมูล
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 2: AUTH / GMAIL PROFILE ==================== -->
+  <div id="auth-modal" class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 w-full max-w-md rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl p-6 space-y-4 animate-slide-up">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-rose-50 dark:bg-rose-950 text-rose-600 flex items-center justify-center font-bold text-lg">G</div>
+          <div>
+            <h3 class="text-base font-bold text-slate-900 dark:text-white">บัญชีผู้ใช้งาน & ซิงก์ Gmail</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400">ลงชื่อเข้าใช้เพื่อผูกข้อมูลกับ Google Sheets</p>
+          </div>
+        </div>
+        <button onclick="closeAuthModal()" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
+      </div>
+
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">ชื่อที่แสดงในระบบ</label>
+          <input type="text" id="auth-name-input" placeholder="เช่น สมชาย ใจดี" class="w-full rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3.5 py-2.5 text-sm outline-none focus:ring-2 focus:ring-brand-500" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">บัญชี Gmail (สำหรับสำรองข้อมูล)</label>
+          <input type="email" id="auth-email-input" placeholder="example@gmail.com" class="w-full rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3.5 py-2.5 text-sm outline-none focus:ring-2 focus:ring-brand-500" />
+        </div>
+      </div>
+
+      <div class="pt-2 flex items-center justify-end gap-2">
+        <button onclick="closeAuthModal()" class="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-semibold text-slate-600 dark:text-slate-300">ยกเลิก</button>
+        <button onclick="saveAuthProfile()" class="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold shadow-sm flex items-center gap-1.5">
+          <span>บันทึกและเชื่อมต่อ</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 3: CUSTOM CONFIRMATION DIALOG ==================== -->
+  <div id="confirm-modal" class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 w-full max-w-sm rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl p-6 space-y-4 animate-slide-up">
+      <div class="w-12 h-12 rounded-2xl bg-rose-100 dark:bg-rose-950 text-rose-600 flex items-center justify-center mx-auto">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+      </div>
+      <div class="text-center">
+        <h4 id="confirm-title" class="text-base font-bold text-slate-900 dark:text-white">ยืนยันการทำรายการ</h4>
+        <p id="confirm-desc" class="text-xs text-slate-500 dark:text-slate-400 mt-1">คุณต้องการดำเนินการนี้ใช่หรือไม่?</p>
+      </div>
+      <div class="grid grid-cols-2 gap-2 pt-2">
+        <button onclick="closeConfirmModal()" class="py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300">ยกเลิก</button>
+        <button id="confirm-action-btn" class="py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold">ยืนยัน</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== JAVASCRIPT APPLICATION LOGIC ==================== -->
+  <script>
+    const STORAGE_KEY = "ot_wage_tracker_pro_v2";
+    const DEFAULT_SHEETS_URL = "https://script.google.com/macros/s/AKfycbwSbHi3vx_ZCkw0GhnrTyo9SzHong4yL9zF5xve58vvJLJQMKmESawi7nL84nxnWt7F0Q/exec";
+    const THAI_MONTHS = [
+      "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
+      "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
+    ];
+    const THAI_MONTHS_SHORT = [
+      "ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.",
+      "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."
+    ];
+    const THAI_DAYS_FULL = ["อาทิตย์", "จันทร์", "อังคาร", "พุธ", "พฤหัสบดี", "ศุกร์", "เสาร์"];
+
+    // Default Application State
+    let appState = {
+      theme: "light",
+      user: {
+        name: "ผู้ใช้งาน",
+        email: ""
+      },
+      settings: {
+        dailyRate: 372,
+        otBaseRate: 46.5,
+        monthlyGoal: 15000,
+        ssoEnabled: false,
+        cycle1Start: 29,
+        cycle1End: 13,
+        cycle2Start: 14,
+        cycle2End: 28
+      },
+      currentYear: new Date().getFullYear(),
+      currentMonth: new Date().getMonth(), // 0-11
+      activeTab: "dashboard",
+      records: {}
+      // record format: "YYYY-MM-DD": { worked: true, dailyRate: 372, otBaseRate: 46.5, otItems: [{ hours: 2, mult: 1.5 }], note: "" }
+    };
+
+    // Modal Temp State
+    let modalEditingDate = null;
+    let modalTempOtItems = [];
+    let modalSelectedMult = 1.5;
+
+    // ==================== INITIALIZATION ====================
+    document.addEventListener("DOMContentLoaded", () => {
+      loadState();
+      applyTheme(appState.theme);
+      initSelectors();
+      syncSettingsInputs();
+      updateUserHeader();
+      switchTab(appState.activeTab || "dashboard");
+      const sheetsUrl = localStorage.getItem("ot_wage_sheets_url") || DEFAULT_SHEETS_URL;
+      if (!localStorage.getItem("ot_wage_sheets_url")) localStorage.setItem("ot_wage_sheets_url", sheetsUrl);
+      const urlInput = document.getElementById("sheets-webapp-url");
+      if (urlInput) urlInput.value = sheetsUrl;
+      updateSheetsStatus(sheetsUrl ? "เชื่อมต่อ URL แล้ว • พร้อมส่งหรือดึงข้อมูล" : "ยังไม่ได้ตั้งค่า Google Sheets");
+    });
+
+    function loadState() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          appState = {
+            ...appState,
+            ...parsed,
+            settings: { ...appState.settings, ...(parsed.settings || {}) },
+            user: { ...appState.user, ...(parsed.user || {}) }
+          };
+        } catch (e) {
+          console.error("Error parsing storage:", e);
+        }
+      } else {
+        // เริ่มต้นด้วยข้อมูลว่าง เพื่อป้องกันยอดตัวอย่างปะปนกับข้อมูลจริง
+        saveState(false);
+      }
+    }
+
+    function seedInitialDemoData() {
+      const now = new Date();
+      const y = now.getFullYear();
+      const m = now.getMonth();
+      const todayDate = now.getDate();
+
+      // Seed previous month 29-31 if applicable (for cross-month cycle demo)
+      const prevM = m === 0 ? 11 : m - 1;
+      const prevY = m === 0 ? y - 1 : y;
+      const daysInPrev = new Date(prevY, prevM + 1, 0).getDate();
+      for (let d = 29; d <= daysInPrev; d++) {
+        const dt = new Date(prevY, prevM, d);
+        if (dt.getDay() !== 0) {
+          const k = formatDateKey(prevY, prevM, d);
+          appState.records[k] = {
+            worked: true,
+            dailyRate: 372,
+            otBaseRate: 46.5,
+            otItems: d % 2 === 0 ? [{ hours: 2, mult: 1.5 }] : [],
+            note: "กะปกติ (รอบข้ามเดือน)"
+          };
+        }
+      }
+
+      // Seed current month up to yesterday
+      for (let d = 1; d < todayDate; d++) {
+        const dt = new Date(y, m, d);
+        const dow = dt.getDay();
+        if (dow !== 0) {
+          const k = formatDateKey(y, m, d);
+          const otList = [];
+          if (d % 3 === 0) otList.push({ hours: 2.5, mult: 1.5 });
+          else if (d % 2 === 0) otList.push({ hours: 1.5, mult: 1.5 });
+          appState.records[k] = {
+            worked: true,
+            dailyRate: 372,
+            otBaseRate: 46.5,
+            otItems: otList,
+            note: ""
+          };
+        }
+      }
+    }
+
+    function saveState(shouldRender = true) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+      if (shouldRender) renderAll();
+    }
+
+    // ==================== DATE & HELPER FUNCTIONS ====================
+    function formatDateKey(year, monthZeroIndexed, day) {
+      return `${year}-${String(monthZeroIndexed + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    }
+
+    function getTodayStr() {
+      const now = new Date();
+      return formatDateKey(now.getFullYear(), now.getMonth(), now.getDate());
+    }
+
+    function parseDateKey(dateStr) {
+      const [y, m, d] = dateStr.split("-").map(Number);
+      return { year: y, month: m - 1, day: d };
+    }
+
+    function formatThaiFullDate(dateStr) {
+      const { year, month, day } = parseDateKey(dateStr);
+      const dt = new Date(year, month, day);
+      const dayName = THAI_DAYS_FULL[dt.getDay()];
+      return `วัน${dayName}ที่ ${day} ${THAI_MONTHS[month]} ${year + 543}`;
+    }
+
+    function formatThaiShortDate(dateStr) {
+      const { year, month, day } = parseDateKey(dateStr);
+      return `${day} ${THAI_MONTHS_SHORT[month]} ${year + 543}`;
+    }
+
+    function formatMoney(num) {
+      return Number(num || 0).toLocaleString("en-US", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+    }
+
+    // Calculate financial breakdown of a single day record
+    function calcRecordTotals(rec) {
+      if (!rec) return { wage: 0, otHours: 0, otPay: 0, total: 0 };
+      const wage = rec.worked ? Number(rec.dailyRate ?? appState.settings.dailyRate) : 0;
+      const baseOt = Number(rec.otBaseRate ?? appState.settings.otBaseRate);
+      let otHours = 0;
+      let otPay = 0;
+
+      if (Array.isArray(rec.otItems)) {
+        rec.otItems.forEach(item => {
+          const h = Number(item.hours) || 0;
+          const mult = Number(item.mult) || 1;
+          otHours += h;
+          otPay += h * baseOt * mult;
+        });
+      }
+      otPay = Math.round(otPay * 100) / 100;
+      return {
+        wage,
+        otHours: Math.round(otHours * 100) / 100,
+        otPay,
+        total: Math.round((wage + otPay) * 100) / 100
+      };
+    }
+
+    // Determine which cycle badge a given day belongs to within the context month
+    function getCycleBadgeForDay(day) {
+      const { cycle1Start, cycle1End, cycle2Start, cycle2End } = appState.settings;
+      if (cycle1Start > cycle1End) {
+        // Cross-month Cycle 1 (e.g. 29 - 13)
+        if (day <= cycle1End) return { label: "ว.1", type: 1 };
+        if (day >= cycle2Start && day <= cycle2End) return { label: "ว.2", type: 2 };
+        if (day >= cycle1Start) return { label: "ว.1 (เดือนหน้า)", type: 1 };
+      } else {
+        // Same-month Cycle 1 (e.g. 1 - 15 / 16 - 31)
+        if (day >= cycle1Start && day <= cycle1End) return { label: "ว.1", type: 1 };
+        if (day >= cycle2Start && day <= cycle2End) return { label: "ว.2", type: 2 };
+      }
+      return null;
+    }
+
+    // Cross-Month Intelligent Pay Cycle Calculation for (year, month)
+    function calculatePayCycles(year, month) {
+      const { cycle1Start, cycle1End, cycle2Start, cycle2End } = appState.settings;
+      const c1Keys = [];
+      const c2Keys = [];
+
+      // Cycle 1 Date Keys
+      if (cycle1Start > cycle1End) {
+        // Pull from previous month (cycle1Start .. end of prev month)
+        const prevMonth = month === 0 ? 11 : month - 1;
+        const prevYear = month === 0 ? year - 1 : year;
+        const daysInPrev = new Date(prevYear, prevMonth + 1, 0).getDate();
+        for (let d = cycle1Start; d <= daysInPrev; d++) {
+          c1Keys.push(formatDateKey(prevYear, prevMonth, d));
+        }
+        // Pull from current month (1 .. cycle1End)
+        const daysInCurr = new Date(year, month + 1, 0).getDate();
+        const actualEnd1 = Math.min(cycle1End, daysInCurr);
+        for (let d = 1; d <= actualEnd1; d++) {
+          c1Keys.push(formatDateKey(year, month, d));
+        }
+      } else {
+        const daysInCurr = new Date(year, month + 1, 0).getDate();
+        const actualEnd1 = Math.min(cycle1End, daysInCurr);
+        for (let d = cycle1Start; d <= actualEnd1; d++) {
+          c1Keys.push(formatDateKey(year, month, d));
+        }
+      }
+
+      // Cycle 2 Date Keys
+      const daysInCurr = new Date(year, month + 1, 0).getDate();
+      const actualEnd2 = Math.min(cycle2End, daysInCurr);
+      for (let d = cycle2Start; d <= actualEnd2; d++) {
+        c2Keys.push(formatDateKey(year, month, d));
+      }
+
+      const sumKeys = (keys) => {
+        let workDays = 0, wage = 0, otHours = 0, otPay = 0, gross = 0;
+        keys.forEach(k => {
+          const rec = appState.records[k];
+          if (rec) {
+            const t = calcRecordTotals(rec);
+            if (rec.worked) workDays++;
+            wage += t.wage;
+            otHours += t.otHours;
+            otPay += t.otPay;
+            gross += t.total;
+          }
+        });
+        gross = Math.round(gross * 100) / 100;
+        wage = Math.round(wage * 100) / 100;
+        // คำนวณประกันสังคม 5% จากฐานค่าแรงปกติ (ไม่รวม OT) เพดานสูงสุด 375 บาท/รอบ
+        const sso = appState.settings.ssoEnabled
+          ? Math.round(Math.min(wage * 0.05, 375) * 100) / 100
+          : 0;
+        const net = Math.max(0, Math.round((gross - sso) * 100) / 100);
+
+        return {
+          workDays,
+          wage,
+          otHours: Math.round(otHours * 100) / 100,
+          otPay: Math.round(otPay * 100) / 100,
+          gross,
+          sso,
+          total: net
+        };
+      };
+
+      const c1RangeText = cycle1Start > cycle1End
+        ? `วันที่ ${cycle1Start} (${THAI_MONTHS_SHORT[month === 0 ? 11 : month - 1]}) - ${cycle1End} ${THAI_MONTHS_SHORT[month]}`
+        : `วันที่ ${cycle1Start} - ${cycle1End} ${THAI_MONTHS_SHORT[month]}`;
+
+      const c2RangeText = `วันที่ ${cycle2Start} - ${actualEnd2} ${THAI_MONTHS_SHORT[month]}`;
+
+      return {
+        c1: { ...sumKeys(c1Keys), rangeText: c1RangeText },
+        c2: { ...sumKeys(c2Keys), rangeText: c2RangeText }
+      };
+    }
+
+    // ==================== NAVIGATION & SELECTORS ====================
+    function initSelectors() {
+      const mSel = document.getElementById("select-month");
+      const ySel = document.getElementById("select-year");
+
+      mSel.innerHTML = THAI_MONTHS.map((name, i) => `<option value="${i}">${name}</option>`).join("");
+      const baseYear = new Date().getFullYear();
+      let yHtml = "";
+      for (let y = baseYear - 3; y <= baseYear + 3; y++) {
+        yHtml += `<option value="${y}">พ.ศ. ${y + 543}</option>`;
+      }
+      ySel.innerHTML = yHtml;
+
+      mSel.value = appState.currentMonth;
+      ySel.value = appState.currentYear;
+      document.getElementById("toggle-sso").checked = appState.settings.ssoEnabled;
+    }
+
+    function switchTab(tabId) {
+      appState.activeTab = tabId;
+      const tabs = ["dashboard", "calendar", "history", "settings"];
+
+      tabs.forEach(t => {
+        const view = document.getElementById(`view-${t}`);
+        if (view) view.classList.toggle("hidden", t !== tabId);
+
+        const dBtn = document.getElementById(`desk-tab-${t}`);
+        if (dBtn) {
+          dBtn.className = t === tabId
+            ? "nav-desk-btn px-4 py-1.5 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 bg-brand-600 text-white shadow-sm"
+            : "nav-desk-btn px-4 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2 text-slate-600 dark:text-slate-300 hover:bg-slate-200/70 dark:hover:bg-slate-700/70";
+        }
+
+        const mBtn = document.getElementById(`mob-tab-${t}`);
+        if (mBtn) {
+          mBtn.className = t === tabId
+            ? "nav-mob-btn flex flex-col items-center justify-center py-1 px-3 rounded-xl text-brand-600 dark:text-brand-400"
+            : "nav-mob-btn flex flex-col items-center justify-center py-1 px-3 rounded-xl text-slate-500 dark:text-slate-400";
+        }
+      });
+
+      renderAll();
+    }
+
+    function changeMonth(delta) {
+      let m = appState.currentMonth + delta;
+      let y = appState.currentYear;
+      if (m > 11) { m = 0; y++; }
+      else if (m < 0) { m = 11; y--; }
+      appState.currentMonth = m;
+      appState.currentYear = y;
+      document.getElementById("select-month").value = m;
+      document.getElementById("select-year").value = y;
+      renderAll();
+    }
+
+    function onMonthYearChange() {
+      appState.currentMonth = parseInt(document.getElementById("select-month").value, 10);
+      appState.currentYear = parseInt(document.getElementById("select-year").value, 10);
+      renderAll();
+    }
+
+    function jumpToToday() {
+      const now = new Date();
+      appState.currentMonth = now.getMonth();
+      appState.currentYear = now.getFullYear();
+      document.getElementById("select-month").value = appState.currentMonth;
+      document.getElementById("select-year").value = appState.currentYear;
+      renderAll();
+      showToast("กลับมาที่เดือนปัจจุบันแล้ว");
+    }
+
+    function toggleSSOEstimate() {
+      appState.settings.ssoEnabled = document.getElementById("toggle-sso").checked;
+      saveState();
+    }
+
+    // ==================== MASTER RENDER PIPELINE ====================
+    function renderAll() {
+      document.getElementById("header-daily-rate").innerText = appState.settings.dailyRate;
+      document.getElementById("header-ot-rate").innerText = appState.settings.otBaseRate;
+
+      renderDashboard();
+      if (appState.activeTab === "calendar") renderCalendarView();
+      if (appState.activeTab === "history") renderHistoryView();
+    }
+
+    // ==================== RENDER DASHBOARD ====================
+    function renderDashboard() {
+      const y = appState.currentYear;
+      const m = appState.currentMonth;
+      const todayStr = getTodayStr();
+
+      // 1. Today Card
+      document.getElementById("dash-today-label").innerText = formatThaiShortDate(todayStr);
+      const todayRec = appState.records[todayStr];
+      if (todayRec && (todayRec.worked || (todayRec.otItems && todayRec.otItems.length > 0))) {
+        const t = calcRecordTotals(todayRec);
+        document.getElementById("dash-today-total").innerText = formatMoney(t.total);
+        document.getElementById("dash-today-breakdown").innerText = `ค่าแรง ${formatMoney(t.wage)} ฿ • โอที ${t.otHours} ชม. (${formatMoney(t.otPay)} ฿)`;
+        document.getElementById("dash-today-status").innerText = todayRec.worked ? "มาทำงานแล้ว ✓" : "ทำเฉพาะ OT";
+      } else {
+        document.getElementById("dash-today-total").innerText = "0.00";
+        document.getElementById("dash-today-breakdown").innerText = "ค่าแรง 0.00 ฿ • โอที 0 ชม. (0.00 ฿)";
+        document.getElementById("dash-today-status").innerText = "ยังไม่บันทึก";
+      }
+
+      // 2. Current Selected Month Stats
+      const daysInMonth = new Date(y, m + 1, 0).getDate();
+      let mWorkDays = 0, mWage = 0, mOtHours = 0, mOtPay = 0, mGross = 0;
+
+      for (let d = 1; d <= daysInMonth; d++) {
+        const k = formatDateKey(y, m, d);
+        const rec = appState.records[k];
+        if (rec) {
+          const t = calcRecordTotals(rec);
+          if (rec.worked) mWorkDays++;
+          mWage += t.wage;
+          mOtHours += t.otHours;
+          mOtPay += t.otPay;
+          mGross += t.total;
+        }
+      }
+
+      const ssoDeduction = appState.settings.ssoEnabled ? Math.round(Math.min(mWage * 0.05, 750) * 100) / 100 : 0;
+      const mNet = Math.max(0, Math.round((mGross - ssoDeduction) * 100) / 100);
+
+      document.getElementById("dash-goal-month-name").innerText = `${THAI_MONTHS[m]} ${y + 543}`;
+      document.getElementById("dash-month-grand").innerText = formatMoney(mNet);
+      document.getElementById("dash-goal-target").innerText = Number(appState.settings.monthlyGoal).toLocaleString("en-US");
+
+      const goal = Number(appState.settings.monthlyGoal) || 15000;
+      const pct = Math.min(100, Math.round((mNet / goal) * 100));
+      document.getElementById("dash-goal-percent").innerText = `${pct}%`;
+      document.getElementById("dash-goal-bar").style.width = `${pct}%`;
+
+      const remain = Math.max(0, goal - mNet);
+      document.getElementById("dash-goal-remaining").innerText = remain > 0
+        ? `ขาดอีก ${formatMoney(remain)} บาท จะถึงเป้าหมาย`
+        : "ยอดเยี่ยม! คุณทำรายได้ทะลุเป้าหมายเดือนนี้แล้ว 🎉";
+
+      document.getElementById("dash-month-days").innerText = mWorkDays;
+      document.getElementById("dash-month-ot-hours").innerText = Math.round(mOtHours * 100) / 100;
+      document.getElementById("dash-month-avg").innerText = mWorkDays > 0 ? Math.round(mNet / mWorkDays).toLocaleString("en-US") : "0";
+
+      // Pace Hint
+      const paceHint = document.getElementById("dash-goal-pace-hint");
+      if (remain <= 0) {
+        paceHint.innerText = "เป้าหมายสำเร็จเรียบร้อย สามารถสะสมยอดเพิ่มเป็นโบนัสส่วนตัวได้เลย!";
+      } else {
+        const estDaysLeft = Math.ceil(remain / (appState.settings.dailyRate || 372));
+        paceHint.innerText = `💡 แนะนำ: ทำงานเพิ่มอีกประมาณ ${estDaysLeft} วัน (หรือเก็บ OT เพิ่ม) เพื่อปิดเป้าหมายเดือนนี้`;
+      }
+
+      // 3. Pay Cycles (Cross-Month Intelligent Logic)
+      const cycles = calculatePayCycles(y, m);
+      const ssoOn = appState.settings.ssoEnabled;
+
+      document.getElementById("c1-days-badge").innerText = `${cycles.c1.workDays} วันงาน`;
+      document.getElementById("c1-date-range").innerText = cycles.c1.rangeText;
+      document.getElementById("c1-total").innerText = formatMoney(cycles.c1.total);
+      document.getElementById("c1-wage").innerText = `${formatMoney(cycles.c1.wage)} ฿`;
+      document.getElementById("c1-ot-hrs").innerText = cycles.c1.otHours;
+      document.getElementById("c1-ot-pay").innerText = `${formatMoney(cycles.c1.otPay)} ฿`;
+      document.getElementById("c1-gross").innerText = `${formatMoney(cycles.c1.gross)} ฿`;
+      document.getElementById("c1-sso").innerText = ssoOn ? `-${formatMoney(cycles.c1.sso)} ฿` : `0.00 ฿ (ปิดอยู่)`;
+      document.getElementById("c1-sso-badge").classList.toggle("hidden", !ssoOn);
+
+      document.getElementById("c2-days-badge").innerText = `${cycles.c2.workDays} วันงาน`;
+      document.getElementById("c2-date-range").innerText = cycles.c2.rangeText;
+      document.getElementById("c2-total").innerText = formatMoney(cycles.c2.total);
+      document.getElementById("c2-wage").innerText = `${formatMoney(cycles.c2.wage)} ฿`;
+      document.getElementById("c2-ot-hrs").innerText = cycles.c2.otHours;
+      document.getElementById("c2-ot-pay").innerText = `${formatMoney(cycles.c2.otPay)} ฿`;
+      document.getElementById("c2-gross").innerText = `${formatMoney(cycles.c2.gross)} ฿`;
+      document.getElementById("c2-sso").innerText = ssoOn ? `-${formatMoney(cycles.c2.sso)} ฿` : `0.00 ฿ (ปิดอยู่)`;
+      document.getElementById("c2-sso-badge").classList.toggle("hidden", !ssoOn);
+
+      // 4. Monthly Net Summary Card
+      document.getElementById("month-summary-label").innerText = `ยอดรวมเดือน ${THAI_MONTHS[m]}`;
+      document.getElementById("card-month-net").innerText = formatMoney(mNet);
+      document.getElementById("card-month-gross").innerText = `${formatMoney(mGross)} ฿`;
+      document.getElementById("card-month-sso").innerText = ssoOn ? `-${formatMoney(ssoDeduction)} ฿` : `0.00 ฿ (ปิดอยู่)`;
+      document.getElementById("month-sso-badge").classList.toggle("hidden", !ssoOn);
+
+      // 5. Yearly Summary & 12-Month Chart Data
+      let yWorkDays = 0, yWage = 0, yOtHours = 0, yOtPay = 0, yTotal = 0;
+      const monthlyChartData = [];
+
+      for (let mo = 0; mo < 12; mo++) {
+        const dInM = new Date(y, mo + 1, 0).getDate();
+        let moWage = 0, moOtPay = 0;
+        for (let d = 1; d <= dInM; d++) {
+          const rec = appState.records[formatDateKey(y, mo, d)];
+          if (rec) {
+            const t = calcRecordTotals(rec);
+            if (rec.worked) yWorkDays++;
+            moWage += t.wage;
+            moOtPay += t.otPay;
+            yOtHours += t.otHours;
+          }
+        }
+        yWage += moWage;
+        yOtPay += moOtPay;
+        yTotal += (moWage + moOtPay);
+        monthlyChartData.push({ monthIndex: mo, wage: moWage, otPay: moOtPay, total: moWage + moOtPay });
+      }
+
+      document.getElementById("card-year-label").innerText = y + 543;
+      document.getElementById("card-year-days").innerText = `${yWorkDays} วัน`;
+      document.getElementById("card-year-total").innerText = formatMoney(yTotal);
+      document.getElementById("card-year-wage").innerText = `${formatMoney(yWage)} ฿`;
+      document.getElementById("card-year-ot-hrs").innerText = Math.round(yOtHours * 100) / 100;
+      document.getElementById("card-year-ot-pay").innerText = `${formatMoney(yOtPay)} ฿`;
+
+      render12MonthChart(monthlyChartData, y);
+    }
+
+    function render12MonthChart(data, year) {
+      document.getElementById("chart-year-title").innerText = year + 543;
+      const chartEl = document.getElementById("chart-12-months");
+      const labelsEl = document.getElementById("chart-12-labels");
+
+      const maxVal = Math.max(...data.map(d => d.total), Number(appState.settings.monthlyGoal) || 15000, 1000);
+
+      chartEl.innerHTML = data.map(item => {
+        const isSelected = item.monthIndex === appState.currentMonth;
+        const wagePct = Math.round((item.wage / maxVal) * 100);
+        const otPct = Math.round((item.otPay / maxVal) * 100);
+
+        return `
+          <div onclick="selectChartMonth(${item.monthIndex})" class="group relative h-full flex flex-col justify-end items-center cursor-pointer">
+            <!-- Tooltip -->
+            <div class="opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity absolute -top-12 z-20 bg-slate-900 dark:bg-slate-700 text-white text-[10px] rounded-lg px-2 py-1 whitespace-nowrap shadow-lg">
+              <div class="font-bold">${THAI_MONTHS_SHORT[item.monthIndex]}: ${Math.round(item.total).toLocaleString()} ฿</div>
+              <div class="text-slate-300">แรง ${Math.round(item.wage).toLocaleString()} | OT ${Math.round(item.otPay).toLocaleString()}</div>
+            </div>
+            <!-- Bar Stack -->
+            <div class="w-full max-w-[28px] sm:max-w-[36px] flex flex-col justify-end rounded-t-lg overflow-hidden transition-all duration-300 ${isSelected ? 'ring-2 ring-brand-500 ring-offset-2 dark:ring-offset-slate-900' : 'opacity-85 group-hover:opacity-100'}" style="height: ${Math.max(wagePct + otPct, item.total > 0 ? 4 : 2)}%">
+              <div class="w-full bg-amber-400 transition-all duration-300" style="height: ${item.total > 0 ? (item.otPay / item.total) * 100 : 0}%"></div>
+              <div class="w-full bg-brand-500 transition-all duration-300" style="height: ${item.total > 0 ? (item.wage / item.total) * 100 : 100}%"></div>
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      labelsEl.innerHTML = data.map(item => {
+        const isSelected = item.monthIndex === appState.currentMonth;
+        return `<div onclick="selectChartMonth(${item.monthIndex})" class="cursor-pointer ${isSelected ? 'text-brand-600 dark:text-brand-400 font-bold' : ''}">${THAI_MONTHS_SHORT[item.monthIndex]}</div>`;
+      }).join("");
+    }
+
+    function selectChartMonth(mIdx) {
+      appState.currentMonth = mIdx;
+      document.getElementById("select-month").value = mIdx;
+      renderAll();
+    }
+
+    // ==================== RENDER CALENDAR VIEW ====================
+    function renderCalendarView() {
+      const y = appState.currentYear;
+      const m = appState.currentMonth;
+      const firstDayOfWeek = new Date(y, m, 1).getDay(); // 0 = Sun
+      const daysInMonth = new Date(y, m + 1, 0).getDate();
+      const todayStr = getTodayStr();
+
+      const grid = document.getElementById("calendar-grid");
+      let html = "";
+
+      // Empty cells before day 1
+      for (let i = 0; i < firstDayOfWeek; i++) {
+        html += `<div class="min-h-[82px] sm:min-h-[104px] bg-slate-50/60 dark:bg-slate-950/40"></div>`;
+      }
+
+      // Day cells
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dateKey = formatDateKey(y, m, d);
+        const isToday = dateKey === todayStr;
+        const rec = appState.records[dateKey];
+        const totals = calcRecordTotals(rec);
+        const cycle = getCycleBadgeForDay(d);
+
+        const cycleHtml = cycle
+          ? `<span class="text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded ${cycle.type === 1 ? 'bg-sky-100 dark:bg-sky-950 text-sky-700 dark:text-sky-300' : 'bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300'}">${cycle.label}</span>`
+          : "";
+
+        const hasData = rec && (rec.worked || totals.otHours > 0);
+        const isSunday = new Date(y, m, d).getDay() === 0;
+        const cardBg = isSunday
+          ? "bg-rose-50/80 dark:bg-rose-950/25 border-l-4 border-rose-400"
+          : isToday
+            ? "bg-brand-50/60 dark:bg-brand-950/30 ring-1 ring-inset ring-brand-500"
+            : hasData
+              ? "bg-emerald-50/35 dark:bg-emerald-950/15 hover:bg-slate-50 dark:hover:bg-slate-800/60"
+              : "bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/60";
+
+        html += `
+          <div onclick="openDayModal('${dateKey}')" class="min-h-[84px] sm:min-h-[108px] p-1.5 sm:p-2 cursor-pointer transition-colors flex flex-col justify-between ${cardBg}">
+            <div class="flex items-start justify-between gap-1">
+              <span class="w-6 h-6 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold tabular-nums ${isSunday ? 'text-rose-600 dark:text-rose-300' : isToday ? 'bg-brand-600 text-white' : 'text-slate-700 dark:text-slate-200'}">${d}</span>
+              ${cycleHtml}
+            </div>
+
+            <div class="mt-1 space-y-0.5">
+              ${isSunday ? `<div class="text-[10px] sm:text-[11px] font-bold text-rose-600 dark:text-rose-300 truncate">วันหยุดประจำสัปดาห์</div>` : ""}
+              ${rec && rec.worked ? `<div class="text-[10px] sm:text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 truncate">✓ ทำงาน</div>` : ""}
+              ${totals.otHours > 0 ? `<div class="text-[10px] sm:text-[11px] font-bold text-amber-600 dark:text-amber-400 truncate">+OT ${totals.otHours} ชม.</div>` : ""}
+              ${hasData ? `<div class="text-[10px] sm:text-xs font-bold text-slate-900 dark:text-white tabular-nums pt-0.5 border-t border-slate-200/60 dark:border-slate-800">${Math.round(totals.total).toLocaleString()} ฿</div>` : ""}
+            </div>
+          </div>
+        `;
+      }
+
+      grid.innerHTML = html;
+    }
+
+    function batchMarkWeekdays() {
+      const y = appState.currentYear;
+      const m = appState.currentMonth;
+      const daysInMonth = new Date(y, m + 1, 0).getDate();
+      let count = 0;
+
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dt = new Date(y, m, d);
+        const dow = dt.getDay();
+        if (dow !== 0) {
+          const k = formatDateKey(y, m, d);
+          if (!appState.records[k]) {
+            appState.records[k] = {
+              worked: true,
+              dailyRate: appState.settings.dailyRate,
+              otBaseRate: appState.settings.otBaseRate,
+              otItems: [],
+              note: ""
+            };
+            count++;
+          } else if (!appState.records[k].worked) {
+            appState.records[k].worked = true;
+            appState.records[k].dailyRate = appState.settings.dailyRate;
+            count++;
+          }
+        }
+      }
+
+      saveState();
+      showToast(`ติ๊กวันทำงาน จ.-ศ. เพิ่มให้แล้ว ${count} วัน`);
+    }
+
+    function openConfirmClearMonth() {
+      const mName = `${THAI_MONTHS[appState.currentMonth]} ${appState.currentYear + 543}`;
+      showConfirmDialog(
+        `ล้างข้อมูลเดือน ${mName}`,
+        "รายการบันทึกค่าแรงและ OT ทั้งหมดในเดือนนี้จะถูกลบถาวร ยืนยันหรือไม่?",
+        () => {
+          const prefix = `${appState.currentYear}-${String(appState.currentMonth + 1).padStart(2, "0")}-`;
+          Object.keys(appState.records).forEach(k => {
+            if (k.startsWith(prefix)) delete appState.records[k];
+          });
+          saveState();
+          showToast(`ล้างข้อมูลเดือน ${mName} เรียบร้อยแล้ว`);
+        }
+      );
+    }
+
+    // ==================== RENDER HISTORY VIEW ====================
+    function renderHistoryView() {
+      const y = appState.currentYear;
+      const m = appState.currentMonth;
+      document.getElementById("history-month-title").innerText = `${THAI_MONTHS[m]} ${y + 543}`;
+
+      const onlyOt = document.getElementById("filter-only-ot").checked;
+      const daysInMonth = new Date(y, m + 1, 0).getDate();
+      const rows = [];
+
+      for (let d = daysInMonth; d >= 1; d--) {
+        const k = formatDateKey(y, m, d);
+        const rec = appState.records[k];
+        if (!rec) continue;
+        const totals = calcRecordTotals(rec);
+        if (!rec.worked && totals.otHours === 0) continue;
+        if (onlyOt && totals.otHours === 0) continue;
+
+        const cycle = getCycleBadgeForDay(d);
+        const otDesc = (rec.otItems || []).map(i => `${i.hours}ชม.(${i.mult}x)`).join(", ") || "-";
+
+        rows.push(`
+          <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+            <td class="py-3 px-3 font-semibold text-slate-800 dark:text-slate-100 whitespace-nowrap">${formatThaiShortDate(k)}</td>
+            <td class="py-3 px-2 whitespace-nowrap">
+              ${cycle ? `<span class="text-[11px] font-bold px-2 py-0.5 rounded ${cycle.type === 1 ? 'bg-sky-100 dark:bg-sky-950 text-sky-700 dark:text-sky-300' : 'bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300'}">${cycle.label}</span>` : "-"}
+            </td>
+            <td class="py-3 px-2">
+              <div class="text-xs font-semibold ${rec.worked ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600'}">${rec.worked ? "มาทำงาน" : "ทำเฉพาะ OT"}</div>
+              ${rec.note ? `<div class="text-[11px] text-slate-400 truncate max-w-[140px]">${rec.note}</div>` : ""}
+            </td>
+            <td class="py-3 px-2 text-right tabular-nums text-slate-700 dark:text-slate-300">${formatMoney(totals.wage)}</td>
+            <td class="py-3 px-2 text-right">
+              <div class="font-semibold text-brand-600 dark:text-brand-400 tabular-nums">${formatMoney(totals.otPay)} ฿</div>
+              <div class="text-[10px] text-slate-400">${otDesc}</div>
+            </td>
+            <td class="py-3 px-3 text-right font-bold text-slate-900 dark:text-white tabular-nums">${formatMoney(totals.total)} ฿</td>
+            <td class="py-3 px-2 text-center whitespace-nowrap">
+              <button onclick="openDayModal('${k}')" class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-brand-100 dark:hover:bg-brand-900 text-xs font-semibold text-brand-600 dark:text-brand-400 transition-colors">แก้ไข</button>
+            </td>
+          </tr>
+        `);
+      }
+
+      const tbody = document.getElementById("history-table-body");
+      const emptyEl = document.getElementById("history-empty-state");
+      if (rows.length === 0) {
+        tbody.innerHTML = "";
+        emptyEl.classList.remove("hidden");
+      } else {
+        emptyEl.classList.add("hidden");
+        tbody.innerHTML = rows.join("");
+      }
+    }
+
+    // ==================== DAY MODAL & MULTI-RATE OT ====================
+    function openDayModal(dateKey) {
+      modalEditingDate = dateKey;
+      const { day } = parseDateKey(dateKey);
+      const cycle = getCycleBadgeForDay(day);
+
+      const badgeEl = document.getElementById("modal-cycle-badge");
+      if (cycle) {
+        badgeEl.classList.remove("hidden");
+        badgeEl.innerText = `รอบตัดวีค: ${cycle.label}`;
+      } else {
+        badgeEl.classList.add("hidden");
+      }
+
+      document.getElementById("modal-date-title").innerText = formatThaiFullDate(dateKey);
+
+      const existing = appState.records[dateKey];
+      const baseWage = existing ? existing.dailyRate : appState.settings.dailyRate;
+      const baseOt = existing ? existing.otBaseRate : appState.settings.otBaseRate;
+
+      document.getElementById("modal-base-wage-text").innerText = baseWage;
+      document.getElementById("modal-ot-base-rate").innerText = baseOt;
+      document.getElementById("modal-worked-toggle").checked = existing ? Boolean(existing.worked) : true;
+      document.getElementById("modal-note-input").value = existing ? (existing.note || "") : "";
+
+      modalTempOtItems = existing && Array.isArray(existing.otItems)
+        ? existing.otItems.map(item => ({ ...item }))
+        : [];
+
+      selectOtMultiplier(1.5);
+      renderModalOtItems();
+      updateModalSummary();
+
+      document.getElementById("day-modal").classList.remove("hidden");
+    }
+
+    function closeDayModal() {
+      document.getElementById("day-modal").classList.add("hidden");
+      modalEditingDate = null;
+    }
+
+    function setQuickOtHour(val) {
+      document.getElementById("modal-ot-hours-input").value = val;
+    }
+
+    function selectOtMultiplier(mult) {
+      modalSelectedMult = mult;
+      [1, 1.5, 2, 3].forEach(m => {
+        const btn = document.getElementById(`mult-btn-${m}`);
+        if (btn) {
+          btn.className = m === mult
+            ? "mult-btn py-1.5 rounded-xl border border-brand-600 bg-brand-600 text-white text-xs font-bold shadow-sm transition-all"
+            : "mult-btn py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold hover:border-brand-400 transition-all";
+        }
+      });
+    }
+
+    function addOtItemToModal() {
+      const hrs = parseFloat(document.getElementById("modal-ot-hours-input").value);
+      if (isNaN(hrs) || hrs <= 0) {
+        showToast("กรุณาระบุจำนวนชั่วโมง OT ให้ถูกต้อง");
+        return;
+      }
+      modalTempOtItems.push({ hours: hrs, mult: modalSelectedMult });
+      renderModalOtItems();
+      updateModalSummary();
+    }
+
+    function removeOtItemFromModal(idx) {
+      modalTempOtItems.splice(idx, 1);
+      renderModalOtItems();
+      updateModalSummary();
+    }
+
+    function renderModalOtItems() {
+      const listEl = document.getElementById("modal-ot-items-list");
+      document.getElementById("modal-ot-count").innerText = `${modalTempOtItems.length} รายการ`;
+
+      if (modalTempOtItems.length === 0) {
+        listEl.innerHTML = `<div class="text-center py-3 text-xs text-slate-400 bg-slate-50 dark:bg-slate-800/40 rounded-xl">ยังไม่มีรายการ OT ในวันนี้</div>`;
+        return;
+      }
+
+      const existing = appState.records[modalEditingDate];
+      const baseOt = existing ? existing.otBaseRate : appState.settings.otBaseRate;
+
+      listEl.innerHTML = modalTempOtItems.map((item, idx) => {
+        const pay = Math.round(item.hours * baseOt * item.mult * 100) / 100;
+        return `
+          <div class="flex items-center justify-between px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200/70 dark:border-slate-700/70 text-xs">
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 font-bold">${item.mult}x</span>
+              <span class="font-semibold text-slate-800 dark:text-slate-100">${item.hours} ชั่วโมง</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="font-bold text-brand-600 dark:text-brand-400 tabular-nums">+${formatMoney(pay)} ฿</span>
+              <button type="button" onclick="removeOtItemFromModal(${idx})" class="text-rose-500 hover:text-rose-700 font-bold px-1">✕</button>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function updateModalSummary() {
+      const worked = document.getElementById("modal-worked-toggle").checked;
+      const existing = appState.records[modalEditingDate];
+      const baseWage = existing ? existing.dailyRate : appState.settings.dailyRate;
+      const baseOt = existing ? existing.otBaseRate : appState.settings.otBaseRate;
+
+      const totals = calcRecordTotals({
+        worked,
+        dailyRate: baseWage,
+        otBaseRate: baseOt,
+        otItems: modalTempOtItems
+      });
+
+      document.getElementById("modal-total-amount").innerText = formatMoney(totals.total);
+    }
+
+    function saveDayModal() {
+      if (!modalEditingDate) return;
+      const worked = document.getElementById("modal-worked-toggle").checked;
+      const note = document.getElementById("modal-note-input").value.trim();
+
+      if (!worked && modalTempOtItems.length === 0 && !note) {
+        delete appState.records[modalEditingDate];
+      } else {
+        const existing = appState.records[modalEditingDate];
+        appState.records[modalEditingDate] = {
+          worked,
+          dailyRate: existing ? existing.dailyRate : appState.settings.dailyRate,
+          otBaseRate: existing ? existing.otBaseRate : appState.settings.otBaseRate,
+          otItems: modalTempOtItems,
+          note
+        };
+      }
+
+      saveState();
+      showToast(`บันทึกข้อมูล ${formatThaiShortDate(modalEditingDate)} เรียบร้อยแล้ว`);
+      closeDayModal();
+    }
+
+    function deleteDayRecord() {
+      if (!modalEditingDate) return;
+      delete appState.records[modalEditingDate];
+      saveState();
+      showToast(`ลบข้อมูลวันที่ ${formatThaiShortDate(modalEditingDate)} แล้ว`);
+      closeDayModal();
+    }
+
+    function quickMarkTodayWork() {
+      const today = getTodayStr();
+      const existing = appState.records[today];
+      appState.records[today] = {
+        worked: true,
+        dailyRate: existing ? existing.dailyRate : appState.settings.dailyRate,
+        otBaseRate: existing ? existing.otBaseRate : appState.settings.otBaseRate,
+        otItems: existing ? (existing.otItems || []) : [],
+        note: existing ? (existing.note || "") : ""
+      };
+      saveState();
+      showToast("บันทึกเข้างานวันนี้เรียบร้อยแล้ว ✓");
+    }
+
+    // ==================== SETTINGS, BACKUP & PROFILE ====================
+    function syncSettingsInputs() {
+      document.getElementById("set-daily-rate").value = appState.settings.dailyRate;
+      document.getElementById("set-ot-rate").value = appState.settings.otBaseRate;
+      document.getElementById("set-monthly-goal").value = appState.settings.monthlyGoal;
+      document.getElementById("set-c1-start").value = appState.settings.cycle1Start;
+      document.getElementById("set-c1-end").value = appState.settings.cycle1End;
+      document.getElementById("set-c2-start").value = appState.settings.cycle2Start;
+      document.getElementById("set-c2-end").value = appState.settings.cycle2End;
+    }
+
+    function autoCalcOtBase() {
+      const daily = parseFloat(document.getElementById("set-daily-rate").value) || 0;
+      const hourly = Math.round((daily / 8) * 100) / 100;
+      document.getElementById("set-ot-rate").value = hourly;
+      showToast(`คำนวณเรท OT 1x = ${hourly} บาท/ชม.`);
+    }
+
+    function saveRateSettings() {
+      const daily = parseFloat(document.getElementById("set-daily-rate").value);
+      const otRate = parseFloat(document.getElementById("set-ot-rate").value);
+      const goal = parseFloat(document.getElementById("set-monthly-goal").value);
+      const scope = document.querySelector('input[name="rate-apply-scope"]:checked').value;
+
+      if (isNaN(daily) || daily < 0 || isNaN(otRate) || otRate < 0) {
+        showToast("กรุณากรอกตัวเลขค่าแรงและเรท OT ให้ถูกต้อง");
+        return;
+      }
+
+      appState.settings.dailyRate = daily;
+      appState.settings.otBaseRate = otRate;
+      appState.settings.monthlyGoal = isNaN(goal) || goal <= 0 ? 15000 : goal;
+
+      const todayStr = getTodayStr();
+      Object.keys(appState.records).forEach(k => {
+        if (scope === "all" || k >= todayStr) {
+          appState.records[k].dailyRate = daily;
+          appState.records[k].otBaseRate = otRate;
+        }
+      });
+
+      saveState();
+      showToast(scope === "all" ? "อัปเดตเรทใหม่ย้อนหลังทั้งหมดเรียบร้อย!" : "บันทึกเรทใหม่สำหรับวันนี้และอนาคตแล้ว!");
+    }
+
+    function applyCyclePreset(type) {
+      if (type === "29-13") {
+        document.getElementById("set-c1-start").value = 29;
+        document.getElementById("set-c1-end").value = 13;
+        document.getElementById("set-c2-start").value = 14;
+        document.getElementById("set-c2-end").value = 28;
+      } else {
+        document.getElementById("set-c1-start").value = 1;
+        document.getElementById("set-c1-end").value = 15;
+        document.getElementById("set-c2-start").value = 16;
+        document.getElementById("set-c2-end").value = 31;
+      }
+      saveCycleSettings();
+    }
+
+    function saveCycleSettings() {
+      const c1s = parseInt(document.getElementById("set-c1-start").value, 10) || 1;
+      const c1e = parseInt(document.getElementById("set-c1-end").value, 10) || 15;
+      const c2s = parseInt(document.getElementById("set-c2-start").value, 10) || 16;
+      const c2e = parseInt(document.getElementById("set-c2-end").value, 10) || 31;
+
+      appState.settings.cycle1Start = Math.min(31, Math.max(1, c1s));
+      appState.settings.cycle1End = Math.min(31, Math.max(1, c1e));
+      appState.settings.cycle2Start = Math.min(31, Math.max(1, c2s));
+      appState.settings.cycle2End = Math.min(31, Math.max(1, c2e));
+
+      saveState();
+      showToast("บันทึกรอบตัดวีคเรียบร้อยแล้ว");
+    }
+
+    function exportDataJSON() {
+      const dataStr = JSON.stringify(appState, null, 2);
+      const blob = new Blob([dataStr], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `OT_Wage_Backup_${getTodayStr()}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast("ดาวน์โหลดไฟล์สำรองข้อมูลเรียบร้อยแล้ว");
+    }
+
+    function importDataJSON(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const imported = JSON.parse(e.target.result);
+          if (imported && imported.settings && imported.records) {
+            appState = { ...appState, ...imported };
+            saveState();
+            syncSettingsInputs();
+            updateUserHeader();
+            showToast("กู้คืนข้อมูลจากไฟล์สำเร็จ!");
+          } else {
+            showToast("รูปแบบไฟล์ไม่ถูกต้อง");
+          }
+        } catch (err) {
+          showToast("ไม่สามารถอ่านไฟล์สำรองได้");
+        }
+        event.target.value = "";
+      };
+      reader.readAsText(file);
+    }
+
+    let sheetsPendingNonce = null;
+    function getSheetsUrl() {
+      return (localStorage.getItem("ot_wage_sheets_url") || DEFAULT_SHEETS_URL).trim();
+    }
+    function updateSheetsStatus(message) {
+      const el = document.getElementById("sheets-sync-status");
+      if (el) el.textContent = message;
+    }
+    function saveSheetsUrl() {
+      const url = document.getElementById("sheets-webapp-url").value.trim();
+      if (!/^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec(?:\?.*)?$/.test(url)) {
+        showToast("กรุณาวาง URL Web App จาก Google Apps Script ให้ถูกต้อง"); return;
+      }
+      localStorage.setItem("ot_wage_sheets_url", url);
+      updateSheetsStatus("บันทึก URL แล้ว พร้อมเชื่อมต่อ");
+      showToast("บันทึก URL Google Sheets แล้ว");
+    }
+    function syncToGoogleSheets() {
+      const url = getSheetsUrl();
+      if (!url) { showToast("กรุณาตั้งค่า URL Google Apps Script ก่อน"); return; }
+      const frame = document.getElementById("sheets-sync-frame") || (() => { const f=document.createElement("iframe"); f.name="sheets-sync-frame"; f.id="sheets-sync-frame"; f.style.display="none"; document.body.appendChild(f); return f; })();
+      const nonce = String(Date.now()) + Math.random().toString(36).slice(2);
+      sheetsPendingNonce = nonce;
+      const form = document.createElement("form"); form.method="POST"; form.action=url; form.target=frame.name; form.style.display="none";
+      const fields = { action:"save", payload:JSON.stringify(appState), nonce };
+      Object.entries(fields).forEach(([name,value]) => { const input=document.createElement("input"); input.name=name; input.value=value; form.appendChild(input); });
+      document.body.appendChild(form); updateSheetsStatus("กำลังส่งข้อมูลไป Google Sheets..."); form.submit(); form.remove();
+      showToast("ส่งคำขอซิงก์แล้ว รอผลการบันทึก");
+    }
+    function restoreFromGoogleSheets() {
+      const url = getSheetsUrl();
+      if (!url) { showToast("กรุณาตั้งค่า URL Google Apps Script ก่อน"); return; }
+      const callback = "otSheetsCallback";
+      window[callback] = (result) => {
+        try {
+          if (!result || !result.ok || !result.data) throw new Error(result?.error || "ไม่พบข้อมูล");
+          if (!confirm("การดึงข้อมูลจะแทนที่ข้อมูลปัจจุบันในแอป ต้องการดำเนินการต่อหรือไม่?")) return;
+          const incoming = result.data;
+          if (!incoming.settings || !incoming.records) throw new Error("รูปแบบข้อมูลในชีตไม่ถูกต้อง");
+          appState = { ...appState, ...incoming, settings: { ...appState.settings, ...incoming.settings }, user: { ...appState.user, ...(incoming.user || {}) } };
+          saveState(); syncSettingsInputs(); updateUserHeader();
+          updateSheetsStatus("ดึงข้อมูลจาก Google Sheets สำเร็จ"); showToast("กู้คืนข้อมูลจาก Google Sheets สำเร็จ");
+        } catch (err) { updateSheetsStatus("ดึงข้อมูลไม่สำเร็จ: " + err.message); showToast("ดึงข้อมูลไม่สำเร็จ: " + err.message); }
+        finally { delete window[callback]; script.remove(); }
+      };
+      const script = document.createElement("script");
+      script.onerror = () => { updateSheetsStatus("เชื่อมต่อไม่ได้ ตรวจสอบ URL และสิทธิ์การเผยแพร่"); showToast("เชื่อมต่อ Google Sheets ไม่สำเร็จ"); delete window[callback]; script.remove(); };
+      script.src = url + (url.includes("?") ? "&" : "?") + "action=load&callback=" + callback + "&_=" + Date.now();
+      document.body.appendChild(script); updateSheetsStatus("กำลังดึงข้อมูลจาก Google Sheets...");
+    }
+    window.addEventListener("message", (event) => {
+      if (!event.data || event.data.type !== "OT_SHEETS_SYNC" || event.data.nonce !== sheetsPendingNonce) return;
+      sheetsPendingNonce = null;
+      if (event.data.ok) { updateSheetsStatus("ซิงก์ Google Sheets สำเร็จ • " + new Date().toLocaleString("th-TH")); showToast("บันทึกข้อมูลลง Google Sheets สำเร็จ"); }
+      else { updateSheetsStatus("ซิงก์ไม่สำเร็จ: " + (event.data.error || "เกิดข้อผิดพลาด")); showToast("ซิงก์ไม่สำเร็จ"); }
+    });
+    function simulateGoogleSheetsSync() { syncToGoogleSheets(); }
+
+    function openConfirmResetAll() {
+      showConfirmDialog(
+        "ล้างข้อมูลทั้งหมดในระบบ",
+        "ข้อมูลการบันทึกทั้งหมดและการตั้งค่าจะถูกรีเซ็ตกลับเป็นค่าเริ่มต้น ยืนยันหรือไม่?",
+        () => {
+          localStorage.removeItem(STORAGE_KEY);
+          appState.records = {};
+          saveState();
+          showToast("ล้างข้อมูลทั้งหมดเรียบร้อยแล้ว");
+        }
+      );
+    }
+
+    // ==================== AUTH PROFILE & THEME ====================
+    function openAuthModal() {
+      document.getElementById("auth-name-input").value = appState.user.name || "";
+      document.getElementById("auth-email-input").value = appState.user.email || "";
+      document.getElementById("auth-modal").classList.remove("hidden");
+    }
+
+    function closeAuthModal() {
+      document.getElementById("auth-modal").classList.add("hidden");
+    }
+
+    function saveAuthProfile() {
+      const name = document.getElementById("auth-name-input").value.trim() || "ผู้ใช้งาน";
+      const email = document.getElementById("auth-email-input").value.trim();
+      appState.user.name = name;
+      appState.user.email = email;
+      saveState(false);
+      updateUserHeader();
+      closeAuthModal();
+      showToast(email ? `เชื่อมต่อบัญชี ${email} สำเร็จ` : "อัปเดตชื่อผู้ใช้งานแล้ว");
+    }
+
+    function updateUserHeader() {
+      const name = appState.user.name || "ผู้ใช้งาน";
+      document.getElementById("header-auth-label").innerText = name;
+      document.getElementById("header-auth-avatar").innerText = name.charAt(0).toUpperCase();
+    }
+
+    function toggleTheme() {
+      appState.theme = appState.theme === "dark" ? "light" : "dark";
+      applyTheme(appState.theme);
+      saveState(false);
+    }
+
+    function applyTheme(theme) {
+      const html = document.documentElement;
+      if (theme === "dark") {
+        html.classList.remove("light");
+        html.classList.add("dark");
+      } else {
+        html.classList.remove("dark");
+        html.classList.add("light");
+      }
+    }
+
+    // ==================== CUSTOM CONFIRM & TOAST ====================
+    let pendingConfirmCallback = null;
+
+    function showConfirmDialog(title, desc, onConfirm) {
+      document.getElementById("confirm-title").innerText = title;
+      document.getElementById("confirm-desc").innerText = desc;
+      pendingConfirmCallback = onConfirm;
+      document.getElementById("confirm-action-btn").onclick = () => {
+        if (pendingConfirmCallback) pendingConfirmCallback();
+        closeConfirmModal();
+      };
+      document.getElementById("confirm-modal").classList.remove("hidden");
+    }
+
+    function closeConfirmModal() {
+      document.getElementById("confirm-modal").classList.add("hidden");
+      pendingConfirmCallback = null;
+    }
+
+    function showToast(message) {
+      const container = document.getElementById("toast-container");
+      const toast = document.createElement("div");
+      toast.className = "bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 px-4 py-2.5 rounded-xl text-xs font-semibold shadow-xl animate-fade-in pointer-events-auto flex items-center gap-2";
+      toast.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400"></span><span>${message}</span>`;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = "0";
+        toast.style.transition = "opacity 0.2s ease";
+        setTimeout(() => toast.remove(), 220);
+      }, 2800);
+    }
+  </script>
+  <script>
+    if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
+      window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(err => console.warn("Service worker registration failed:", err)));
+    }
+  </script>
+</body>
+</html>
